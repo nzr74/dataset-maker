@@ -7,11 +7,12 @@ from utils.utils import Savedata
 class Bama:
     categories = {"car": "car", "motorcycle": "motorcycle", "truck": "truck"}
 
-    def __init__(self, category):
+    def __init__(self, category, missing_value):
         if category in self.categories:
             self.category = category
         else:
-            print("please insert correct category")
+            raise("please insert correct category")
+        self.missing_value = missing_value
 
     def extract_page_urls(self):
         url = f"https://bama.ir/{self.categories[self.category]}"
@@ -67,7 +68,11 @@ class Bama:
                 details["body"] = car_details[3].text
                 details["color"] = car_details[4].text
                 details["price"] = int(price)
-                save.save_data(details=details)
+                save.save_data(
+                    details=details,
+                    missing_value=self.missing_value,
+                    site=__class__.__name__.lower(),
+                )
             except (ValueError, AttributeError,IndexError):
                 pass
 

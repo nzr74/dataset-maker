@@ -1,5 +1,6 @@
-from bs4 import BeautifulSoup
-import csv
+import sys
+
+sys.path.insert(0, "/usr/lib/chromium-browser/chromedriver")  # path to chromedriver
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -14,7 +15,6 @@ service = Service(ChromeDriverManager().install())
 
 
 class Extract:
-
     def __init__(self, url, dynamic_content=False):
         self.url = url
         self.dynamic_content = dynamic_content
@@ -23,11 +23,10 @@ class Extract:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(self.url)
         previous_height = driver.execute_script("return document.body.scrollHeight")
-        content = ""
         links = []
         while True:
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(5)
+            time.sleep(2)
             new_height = driver.execute_script("return document.body.scrollHeight")
 
             if new_height == previous_height:
@@ -45,11 +44,10 @@ class Extract:
                 links.append(element.get_attribute("href"))
 
         driver.quit()
-
         return links
 
     def get_data(self):
-  
+
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(self.url)
         time.sleep(5)

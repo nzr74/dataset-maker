@@ -1,24 +1,25 @@
-import sys
 from bs4 import BeautifulSoup
 
 from extract.extract import Extract
-from utils.utils import Savedata
+import utils.utils as util
 
 
 class Divar:
     categories = {"car": "s/iran/auto"}
 
-    def __init__(self, category):
+    def __init__(self, category,missing_value):
         if category in self.categories:
             self.category = category
         else:
-            print("please insert correct category")
+            raise("please insert correct category")
+        self.missing_value = missing_value
 
     def extract_page_urls(self):
         url = f"https://divar.ir/{self.categories[self.category]}"
-        path_element = "div[class='post-list__widget-col-a3fe3']>a"
+        path_element = "article[class='unsafe-kt-post-card unsafe-kt-post-card--outlined unsafe-kt-post-card']>a"
         extr_obj = Extract(url, dynamic_content=True)
         page_urls = extr_obj.get_urls(path_element=path_element)
+
         return page_urls
 
     def extract_car_data(self):
@@ -38,11 +39,11 @@ class Divar:
             "price",
         ]
         destination = "data/divar/car/car_data.csv"
-        save = Savedata(destination, fields)
+        save = util.Savedata(destination, fields)
         urls = self.extract_page_urls()
         print(len(urls))
-        for url in urls:
-            print(url)
+        for i ,url in enumerate(urls,1):
+            print(i," --> ",url)
             try:
                 extr_obj = Extract(url)
                 result = extr_obj.get_data()
@@ -50,6 +51,11 @@ class Divar:
                 car_details = soup.find_all(
                     "div", class_="kt-base-row kt-base-row--large kt-unexpandable-row"
                 )
+                car_condition = soup.find_all(
+                        "div",
+                        class_="kt-base-row kt-base-row--large kt-base-row--has-icon kt-score-row",
+                    )
+
                 mileage_year_color = soup.find_all(
                     "td",
                     class_="kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row",
@@ -65,6 +71,7 @@ class Divar:
                 details["year"] = int(mileage_year_color[1].text)
                 details["color"] = mileage_year_color[2].text
                 details["mileage"] = int(mileage_year_color[0].text.replace("٬", ""))
+
                 for detail in car_details:
                     title = detail.find(
                         "p", class_="kt-base-row__title kt-unexpandable-row__title"
@@ -79,33 +86,6 @@ class Divar:
                             "div",
                             class_="kt-base-row__end kt-unexpandable-row__value-box",
                         ).text
-                    if title == "وضعیت موتور":
-                        details["motor"] = detail.find(
-                            "div",
-                            class_="kt-base-row__end kt-unexpandable-row__value-box",
-                        ).text
-                    if title == "شاسی جلو":
-                        details["front chassis"] = detail.find(
-                            "div",
-                            class_="kt-base-row__end kt-unexpandable-row__value-box",
-                        ).text
-                    if title == "شاسی عقب":
-                        details["rear chassis"] = detail.find(
-                            "div",
-                            class_="kt-base-row__end kt-unexpandable-row__value-box",
-                        ).text
-                    if title == "وضعیت شاسی‌ها":
-                        details["front chassis"] = details["rear chassis"] = (
-                            detail.find(
-                                "div",
-                                class_="kt-base-row__end kt-unexpandable-row__value-box",
-                            ).text
-                        )
-                    if title == "وضعیت بدنه":
-                        details["body"] = detail.find(
-                            "div",
-                            class_="kt-base-row__end kt-unexpandable-row__value-box",
-                        ).text
                     if title == "گیربکس":
                         details["gearbox"] = detail.find(
                             "div",
@@ -116,7 +96,6 @@ class Divar:
                             "div",
                             class_="kt-base-row__end kt-unexpandable-row__value-box",
                         ).text
-
                     if title == "قیمت پایه":
                         details["price"] = int(
                             detail.find(
@@ -126,15 +105,44 @@ class Divar:
                             .text.replace("٬", "")
                             .replace("تومان", "")
                         )
+                for condition in car_condition:
+                    title = condition.find("p", class_="kt-score-row__title").text
 
-                save.save_data(details=details)
+                    if title == "موتور":
+                        details["motor"] = condition.find(
+                            "div",
+                            class_="kt-score-row__score",
+                        ).text
+                    if title == "شاسی جلو":
+                        details["front chassis"] = condition.find(
+                            "div",
+                            class_="kt-score-row__score",
+                        ).text
+                    if title == "شاسی عقب":
+                        details["rear chassis"] = condition.find(
+                            "div",
+                            class_="kt-score-row__score",
+                        ).text
+                    if title == "وضعیت شاسی‌ها":
+                        details["front chassis"] = details["rear chassis"] = (
+                            condition.find(
+                                "div",
+                                class_="kt-score-row__score",
+                            ).text
+                        )
+                    if title == "بدنه":
+                        details["body"] = condition.find(
+                            "div",
+                            class_="kt-score-row__score",
+                        ).text
+
+                print(details)
+                save.save_data(
+                    details=details,
+                    missing_value=self.missing_value,
+                    site=__class__.__name__.lower(),
+                )
             except (ValueError, AttributeError,IndexError):
-                pass
+                print("error")
 
         print("done!!!!!!!!!")
-
-
-
-
-
-
