@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 
 from extract.extract import Extract
-from utils.utils import Savedata
+import utils.utils as util
 
 
 class Bama:
@@ -35,10 +35,11 @@ class Bama:
             "price",
         ]
         destination = "data/bama/car/car_data.csv"
-        save = Savedata(destination, fields)
+        save = util.Savedata(destination, fields)
         urls = self.extract_page_urls()
         print(len(urls))
-        for url in urls:
+        for i, url in enumerate(urls, 1):
+            print(i, " --> ", url)
             try:
                 extr_obj = Extract(url)
                 result = extr_obj.get_data()
@@ -74,6 +75,6 @@ class Bama:
                     site=__class__.__name__.lower(),
                 )
             except (ValueError, AttributeError,IndexError):
-                pass
+                print("error")
 
         print("done!!!!!!!!!")
