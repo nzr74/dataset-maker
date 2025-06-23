@@ -50,4 +50,5 @@ def spinning_loader():
 def complete_loading():
     global stop_flag
     stop_flag = True
+    time.sleep(0.5)
     os.system("clear")
