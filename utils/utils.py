@@ -2,7 +2,7 @@ import csv
 import os
 import sys
 import time
-
+import threading
 
 class Savedata:
 
@@ -16,9 +16,14 @@ class Savedata:
                 os.makedirs(directory)
             print(f"Created new file: {self.destination}")
 
-        with open(self.destination, "w") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self.fields)
-            writer.writeheader()
+        with open(self.destination, "r+") as csvfile:
+            reader = csv.reader(csvfile)
+            try:
+                next(reader)  
+            except StopIteration:
+                writer = csv.DictWriter(csvfile, fieldnames=self.fields)
+                writer.writeheader()
+
 
     def save_data(self, details, missing_value, site):
         full_data_size = {"divar": 13, "bama": 9}
@@ -35,20 +40,23 @@ class Savedata:
         else:
             save()
 
-stop_flag = False
+class Util:
+    stop_flag = False
 
-def spinning_loader():
-    chars = "/—\\|"
-    global stop_flag
-    while not stop_flag:
-        for char in chars:
-            sys.stdout.write("\rPlease wait... " + char)
-            sys.stdout.flush()
-            time.sleep(0.1)
+    def spinning_loader(self):
+        chars = "/—\\|"
+        while not self.stop_flag:
+            for char in chars:
+                sys.stdout.write("\rPlease wait... " + char)
+                sys.stdout.flush()
+                time.sleep(0.1)
+
+    def complete_loading(self):
+        self.stop_flag = True
+        time.sleep(2)
+        os.system("clear")
+        # sys.stdout.write(" ")
 
 
-def complete_loading():
-    global stop_flag
-    stop_flag = True
-    time.sleep(0.5)
-    os.system("clear")
+util_obj = Util()
+loader_thread = threading.Thread(target=util_obj.spinning_loader)

@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from extract.extract import Extract
 import utils.utils as util
-import threading
+
 
 class Divar:
     categories = {"car": "s/iran/auto"}
@@ -9,8 +9,7 @@ class Divar:
     def __init__(self, category,missing_value):
         if category in self.categories:
             self.category = category
-            loader_thread = threading.Thread(target=util.spinning_loader)
-            loader_thread.start()
+            util.loader_thread.start()
         else:
             raise("please insert correct category")
         self.missing_value = missing_value
@@ -42,7 +41,7 @@ class Divar:
         destination = "data/divar/car/car_data.csv"
         save = util.Savedata(destination, fields)
         urls = self.extract_page_urls()
-        util.complete_loading()
+        util.util_obj.complete_loading()
         print(len(urls))
         for i ,url in enumerate(urls,1):
             print(i," --> ",url)

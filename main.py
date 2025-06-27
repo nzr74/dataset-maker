@@ -1,6 +1,7 @@
 import argparse, sys
 from websites.bama import Bama
 from websites.divar import Divar
+import utils.utils as util
 
 
 def main():
@@ -33,4 +34,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        util.util_obj.complete_loading()
+        print(type(e).__name__)
